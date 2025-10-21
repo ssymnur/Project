@@ -1,1 +1,81 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>My dApp</title>
+</head>
+<body>
+  <button id="connect">MetaMask'e Bağlan</button>
+  <button id="read">Değeri Oku</button>
+  <button id="write">Artır (increment)</button>
+  <pre id="out"></pre>
 
+  <!-- Ethers v6 UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+
+  <script>
+    const CONTRACT_ADDRESS = "0x7622Aa45355c4f216CcB4811b8B09968f128D119";  
+    const ABI = [ 
+
+	{
+		"inputs": [],
+		"name": "decrement",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "increment",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "get",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+    ];
+
+    let provider, signer, contract;
+
+    async function connect() {
+      if (!window.ethereum) return alert("MetaMask gerekli.");
+      provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = await provider.getSigner();
+      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      log("Bağlandı: " + await signer.getAddress());
+    }
+
+    async function read() {
+      const v = await contract.get();
+      log("Değer: " + v.toString());
+    }
+
+    async function write() {
+      const tx = await contract.increment();
+      log("Gönderildi: " + tx.hash);
+      await tx.wait();
+      log("Onaylandı.");
+    }
+
+    function log(m) {
+      document.getElementById("out").textContent += m + "\n";
+    }
+
+    document.getElementById("connect").onclick = connect;
+    document.getElementById("read").onclick = read;
+    document.getElementById("write").onclick = write;
+  </script>
+</body>
+</html>
